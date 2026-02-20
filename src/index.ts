@@ -30,7 +30,7 @@ export { createWasmEngine } from './wasm-inference';
 export type { WasmInferenceEngine } from './wasm-inference';
 
 const DEFAULT_MODEL_URL =
-  'https://cdn.jsdelivr.net/gh/peterolson/hanscribe@master/test/test.hzmodel';
+  'https://cdn.jsdelivr.net/gh/peterolson/hanscribe@v0.1.1/test/test.hzmodel';
 
 /** Create an inline Web Worker from bundled source code. */
 function spawnWorker(): Worker {

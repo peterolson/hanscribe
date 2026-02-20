@@ -1,6 +1,6 @@
 {
   "name": "hanscribe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chinese handwriting recognition for the web — zero dependencies, WASM-powered",
   "type": "module",
   "main": "dist/hanscribe.umd.js",
