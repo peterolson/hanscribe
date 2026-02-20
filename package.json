@@ -47,6 +47,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/peterolson/hanscribe.git"
+    "url": "git+https://github.com/peterolson/hanscribe.git"
   }
 }
