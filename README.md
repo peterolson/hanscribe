@@ -56,7 +56,7 @@ const pad = await HanScribe.create({
 
 ## Model File
 
-The `.hzmodel` file (~7.5 MB) is not included in the npm package. By default, the library fetches it from the [latest GitHub Release](https://github.com/peterolson/hanscribe/releases/latest/download/hanscribe.hzmodel), so no configuration is needed for basic usage.
+The `.hzmodel` file (~7.5 MB) is not included in the npm package. By default, the library fetches it from [jsdelivr](https://cdn.jsdelivr.net/gh/peterolson/hanscribe@master/test/test.hzmodel), so no configuration is needed for basic usage.
 
 To self-host the model (recommended for production), download it from the [Releases page](https://github.com/peterolson/hanscribe/releases) and pass its URL via the `modelUrl` option:
 
@@ -79,7 +79,7 @@ Creates a new handwriting recognition pad.
 |--------|------|---------|-------------|
 | `element` | `HTMLElement` | *required* | Container element (canvas created inside) |
 | `onRecognize` | `(results: HanScribeResult[]) => void` | `undefined` | Called with results after each stroke |
-| `modelUrl` | `string` | Latest GitHub Release | URL to the .hzmodel file |
+| `modelUrl` | `string` | jsdelivr CDN | URL to the .hzmodel file |
 | `strokeColor` | `string` | `'#000'` | Stroke color |
 | `strokeWidth` | `number` | `3` | Stroke width in CSS pixels |
 | `topK` | `number` | `10` | Number of top candidates to return |
