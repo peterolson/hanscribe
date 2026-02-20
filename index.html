@@ -207,7 +207,7 @@
   </div><!-- /page -->
 
   <script type="module">
-    import { HanScribe } from './dist/hanscribe.js';
+    import { HanScribe } from 'https://cdn.jsdelivr.net/npm/hanscribe/dist/hanscribe.js';
 
     const statusEl = document.getElementById('status');
     const resultsEl = document.getElementById('results');
@@ -259,7 +259,7 @@
       try {
         pad = await HanScribe.create({
           element: document.getElementById('draw-area'),
-          modelUrl: 'test/test.hzmodel',
+          modelUrl: 'https://cdn.jsdelivr.net/gh/peterolson/hanscribe@master/test/test.hzmodel',
           strokeColor: optColor.value,
           strokeWidth: Number(optWidth.value),
           topK: Number(optTopK.value),
