@@ -17,40 +17,55 @@ Chinese handwriting recognition for the web. Zero dependencies, small bundle (~7
 npm install hanscribe
 ```
 
-Or use a `<script>` tag:
-
-```html
-<script src="https://unpkg.com/hanscribe/dist/hanscribe.umd.js"></script>
-```
+Or include via script tag — see [Quick Start](#quick-start) below.
 
 ## Quick Start
 
+### Script tag (no bundler)
+
 ```html
+<script src="https://unpkg.com/hanscribe/dist/hanscribe.umd.js"></script>
+
 <div id="draw-area" style="width: 300px; height: 300px; border: 1px solid #ccc;"></div>
 <div id="results"></div>
 
-<script type="module">
+<script>
+HanScribe.HanScribe.create({
+  element: document.getElementById('draw-area'),
+  onRecognize(results) {
+    document.getElementById('results').textContent =
+      results.map(r => r.char + ' ' + (r.score * 100).toFixed(1) + '%').join('  ');
+  },
+});
+</script>
+```
+
+### ES module (with bundler)
+
+```js
 import { HanScribe } from 'hanscribe';
 
 const pad = await HanScribe.create({
   element: document.getElementById('draw-area'),
-  modelUrl: '/hanscribe.hzmodel',
   onRecognize(results) {
     document.getElementById('results').textContent =
       results.map(r => `${r.char} ${(r.score * 100).toFixed(1)}%`).join('  ');
   },
 });
-
-// Clear button
-document.getElementById('clear-btn')?.addEventListener('click', () => pad.clear());
-</script>
 ```
 
 ## Model File
 
-The `.hzmodel` file (~7.5 MB) must be hosted separately and provided via `modelUrl`. It is not included in the npm package.
+The `.hzmodel` file (~7.5 MB) is not included in the npm package. By default, the library fetches it from the [latest GitHub Release](https://github.com/peterolson/hanscribe/releases/latest/download/hanscribe.hzmodel), so no configuration is needed for basic usage.
 
-To generate the model file, see the converter tool in the companion repository.
+To self-host the model (recommended for production), download it from the [Releases page](https://github.com/peterolson/hanscribe/releases) and pass its URL via the `modelUrl` option:
+
+```js
+const pad = await HanScribe.create({
+  element: document.getElementById('draw-area'),
+  modelUrl: '/hanscribe.hzmodel',
+});
+```
 
 ## API Reference
 
@@ -64,7 +79,7 @@ Creates a new handwriting recognition pad.
 |--------|------|---------|-------------|
 | `element` | `HTMLElement` | *required* | Container element (canvas created inside) |
 | `onRecognize` | `(results: HanScribeResult[]) => void` | `undefined` | Called with results after each stroke |
-| `modelUrl` | `string` | `'hanscribe.hzmodel'` | URL to the .hzmodel file |
+| `modelUrl` | `string` | Latest GitHub Release | URL to the .hzmodel file |
 | `strokeColor` | `string` | `'#000'` | Stroke color |
 | `strokeWidth` | `number` | `3` | Stroke width in CSS pixels |
 | `topK` | `number` | `10` | Number of top candidates to return |

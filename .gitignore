@@ -3,5 +3,3 @@ build/
 dist/
 *.tgz
 .DS_Store
-test/test.hzmodel
-test/medians-cache.json

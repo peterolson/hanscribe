@@ -29,7 +29,8 @@ export { preprocessStrokes } from './preprocessing';
 export { createWasmEngine } from './wasm-inference';
 export type { WasmInferenceEngine } from './wasm-inference';
 
-const DEFAULT_MODEL_URL = 'hanscribe.hzmodel';
+const DEFAULT_MODEL_URL =
+  'https://github.com/peterolson/hanscribe/releases/latest/download/hanscribe.hzmodel';
 
 /** Create an inline Web Worker from bundled source code. */
 function spawnWorker(): Worker {

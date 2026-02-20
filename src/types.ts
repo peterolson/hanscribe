@@ -4,7 +4,7 @@ export interface HanScribeOptions {
   element: HTMLElement;
   /** Called with recognition results after each stroke (debounced). */
   onRecognize?: (results: HanScribeResult[]) => void;
-  /** URL to the .hzmodel file. Defaults to bundled CDN URL. */
+  /** URL to the .hzmodel file. Defaults to latest GitHub Release. */
   modelUrl?: string;
   /** Stroke color. Default: '#000' */
   strokeColor?: string;
