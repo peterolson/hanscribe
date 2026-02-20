@@ -1,0 +1,20 @@
+{
+  "options": {
+    "outFile": "../build/inference.wasm",
+    "textFile": "../build/inference.wat",
+    "optimize": true,
+    "runtime": "stub",
+    "exportRuntime": true,
+    "use": ["abort="]
+  },
+  "targets": {
+    "debug": {
+      "optimize": false,
+      "sourceMap": true
+    },
+    "release": {
+      "optimize": true,
+      "sourceMap": false
+    }
+  }
+}

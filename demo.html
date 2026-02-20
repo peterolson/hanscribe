@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HanScribe Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 { margin-bottom: 4px; }
+    .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .draw-panel {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #draw-area {
+      width: 300px;
+      height: 300px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      background: white;
+    }
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #e0e0e0;
+      color: #333;
+    }
+    button:hover { background: #d0d0d0; }
+    button.primary { background: #4CAF50; color: white; }
+    button.primary:hover { background: #45a049; }
+    .results-panel {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      min-width: 200px;
+    }
+    .results-panel h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #666;
+    }
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-char {
+      font-size: 28px;
+      width: 40px;
+      text-align: center;
+    }
+    .result-bar-container {
+      flex: 1;
+      height: 20px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .result-bar {
+      height: 100%;
+      background: #4CAF50;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .result-score {
+      font-size: 12px;
+      color: #999;
+      width: 45px;
+      text-align: right;
+    }
+    #status {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <h1>HanScribe</h1>
+  <p class="subtitle">Draw a Chinese character below</p>
+
+  <div class="container">
+    <div class="draw-panel">
+      <div id="draw-area"></div>
+      <div class="buttons">
+        <button id="clear-btn">Clear</button>
+        <button id="recognize-btn" class="primary">Recognize</button>
+      </div>
+      <div id="status">Loading model...</div>
+    </div>
+
+    <div class="results-panel">
+      <h2>Results</h2>
+      <div id="results">
+        <div style="color: #ccc; font-size: 14px;">Draw a character to see results</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Use the built ESM bundle
+    import { HanScribe } from './dist/hanscribe.js';
+
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+
+    try {
+      const pad = await HanScribe.create({
+        element: document.getElementById('draw-area'),
+        modelUrl: 'test/test.hzmodel',
+        topK: 8,
+        onRecognize(results) {
+          renderResults(results);
+        },
+      });
+
+      statusEl.textContent = 'Ready — draw a character';
+
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        pad.clear();
+        resultsEl.innerHTML = '<div style="color: #ccc; font-size: 14px;">Draw a character to see results</div>';
+      });
+
+      document.getElementById('recognize-btn').addEventListener('click', async () => {
+        statusEl.textContent = 'Recognizing...';
+        const results = await pad.recognize();
+        renderResults(results);
+        statusEl.textContent = `Found ${results.length} candidates`;
+      });
+    } catch (err) {
+      statusEl.textContent = `Error: ${err.message}`;
+      console.error(err);
+    }
+
+    function renderResults(results) {
+      if (results.length === 0) {
+        resultsEl.innerHTML = '<div style="color: #ccc; font-size: 14px;">No results</div>';
+        return;
+      }
+      const maxScore = results[0].score;
+      resultsEl.innerHTML = results.map(r => `
+        <div class="result-item">
+          <div class="result-char">${r.char}</div>
+          <div class="result-bar-container">
+            <div class="result-bar" style="width: ${(r.score / maxScore * 100).toFixed(1)}%"></div>
+          </div>
+          <div class="result-score">${(r.score * 100).toFixed(1)}%</div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

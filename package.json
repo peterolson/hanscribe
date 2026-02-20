@@ -1,0 +1,51 @@
+{
+  "name": "hanscribe",
+  "version": "0.1.0",
+  "description": "Chinese handwriting recognition for the web — zero dependencies, WASM-powered",
+  "type": "module",
+  "main": "dist/hanscribe.umd.js",
+  "module": "dist/hanscribe.js",
+  "types": "dist/hanscribe.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/hanscribe.js",
+      "require": "./dist/hanscribe.umd.js",
+      "types": "./dist/hanscribe.d.ts"
+    }
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "asbuild": "asc assembly/index.ts --outFile build/inference.wasm --textFile build/inference.wat --optimize --runtime stub --exportRuntime --use abort=",
+    "build:wasm": "npm run asbuild",
+    "build:js": "rollup -c",
+    "build": "npm run build:wasm && npm run build:js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.27.32",
+    "rollup": "^4.9.0",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup-plugin-dts": "^6.1.0",
+    "tslib": "^2.6.0",
+    "typescript": "~5.7.0",
+    "vitest": "^2.0.0",
+    "@vitest/browser": "^2.0.0",
+    "happy-dom": "^15.0.0"
+  },
+  "keywords": [
+    "chinese",
+    "handwriting",
+    "recognition",
+    "wasm",
+    "canvas"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peterolson/hanscribe.git"
+  }
+}
