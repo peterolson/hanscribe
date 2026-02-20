@@ -2,6 +2,8 @@
 
 Chinese handwriting recognition for the web. Zero dependencies, small bundle (~7 KB gzipped), runs entirely in the browser.
 
+**[Try the live demo](https://peterolson.github.io/hanscribe/)**
+
 ## Features
 
 - Draw Chinese characters on an HTML canvas and get back ranked character predictions
