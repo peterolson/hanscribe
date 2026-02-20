@@ -72,4 +72,13 @@ describe('runInference', () => {
     // Score should be high (> 50%)
     expect(scores[0]).toBeGreaterThan(0.5);
   }, 30000); // 30s timeout for inference
+
+  it('recognizes 听 from reference strokes', () => {
+    const { data, numSegments } = preprocessStrokes(refData.ting_strokes);
+    const { indices, scores } = runInference(weights, data, numSegments, 10);
+
+    expect(indices.length).toBeGreaterThan(0);
+    const topChar = weights.vocab[indices[0]];
+    expect(topChar).toBe('听');
+  }, 30000);
 });
