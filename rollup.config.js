@@ -97,6 +97,7 @@ export default [
       format: 'umd',
       name: 'HanScribe',
       exports: 'named',
+      outro: 'Object.assign(exports, exports.HanScribe);',
       sourcemap: true,
     },
     plugins: [
