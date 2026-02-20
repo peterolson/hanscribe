@@ -31,18 +31,19 @@ function normalizeStrokes(
   scale: number,
 ): number[][][] {
   let minX = Infinity, minY = Infinity;
-  let maxY = -Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
 
   for (const stroke of strokes) {
     for (const [x, y] of stroke) {
       if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
     }
   }
 
-  const height = maxY - minY;
-  const s = height > 0 ? scale / height : 1;
+  const extent = Math.max(maxX - minX, maxY - minY);
+  const s = extent > 0 ? scale / extent : 1;
 
   return strokes.map(stroke =>
     stroke.map(([x, y, t]) => [(x - minX) * s, (y - minY) * s, t])
