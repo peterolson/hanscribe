@@ -1,15 +1,10 @@
-// AssemblyScript math helpers — placeholder for future WASM optimization.
-// Currently, inference runs in TypeScript (src/inference.ts).
-// This file will be implemented when porting hot loops to WASM for SIMD.
-
-export function sigmoid(x: f32): f32 {
-  if (x >= 0) {
-    return 1.0 / (1.0 + <f32>Math.exp(<f64>(-x)));
-  }
-  const ex = <f32>Math.exp(<f64>x);
-  return ex / (1.0 + ex);
+/** Sigmoid activation (f32). */
+@inline export function sigmoid(x: f32): f32 {
+  return 1.0 / (1.0 + Mathf.exp(-x));
 }
 
-export function tanhf(x: f32): f32 {
-  return <f32>Math.tanh(<f64>x);
+/** Tanh activation (f32). */
+@inline export function tanhf(x: f32): f32 {
+  const e2x: f32 = Mathf.exp(2.0 * x);
+  return (e2x - 1.0) / (e2x + 1.0);
 }

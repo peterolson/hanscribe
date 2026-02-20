@@ -25,8 +25,9 @@ export type { HanScribeOptions, HanScribeResult, HanScribeInstance };
 
 // Re-export utilities for advanced usage
 export { parseHzModel } from './model-loader';
-export { parseWeights, runInference } from './inference';
 export { preprocessStrokes } from './preprocessing';
+export { createWasmEngine } from './wasm-inference';
+export type { WasmInferenceEngine } from './wasm-inference';
 
 const DEFAULT_MODEL_URL = 'hanscribe.hzmodel';
 

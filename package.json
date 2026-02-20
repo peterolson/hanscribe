@@ -25,16 +25,17 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "assemblyscript": "^0.27.32",
-    "rollup": "^4.9.0",
-    "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@vitest/browser": "^2.0.0",
+    "assemblyscript": "^0.27.32",
+    "happy-dom": "^15.0.0",
+    "rollup": "^4.9.0",
     "rollup-plugin-dts": "^6.1.0",
     "tslib": "^2.6.0",
     "typescript": "~5.7.0",
-    "vitest": "^2.0.0",
-    "@vitest/browser": "^2.0.0",
-    "happy-dom": "^15.0.0"
+    "vitest": "^2.0.0"
   },
   "keywords": [
     "chinese",

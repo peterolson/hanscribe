@@ -5,7 +5,9 @@
     "optimize": true,
     "runtime": "stub",
     "exportRuntime": true,
-    "use": ["abort="]
+    "use": ["abort="],
+    "initialMemory": 16,
+    "maximumMemory": 256
   },
   "targets": {
     "debug": {

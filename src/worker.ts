@@ -1,16 +1,30 @@
 /**
  * Web Worker that handles model loading, preprocessing, and inference.
  * All heavy computation happens here, keeping the main thread responsive.
+ *
+ * Inference runs in WASM (AssemblyScript) for ~4x speedup over TypeScript.
  */
 
 import { parseHzModel } from './model-loader';
-import { parseWeights, runInference } from './inference';
+import { createWasmEngine, type WasmInferenceEngine } from './wasm-inference';
 import { preprocessStrokes } from './preprocessing';
 import type { WorkerRequest, WorkerResponse, HanScribeResult } from './types';
 
-type ModelWeights = ReturnType<typeof parseWeights>;
+// @ts-ignore — virtual module resolved by rollup wasmInline plugin
+import wasmBase64 from 'wasm-inline';
 
-let weights: ModelWeights | null = null;
+let engine: WasmInferenceEngine | null = null;
+let vocab: string[] = [];
+
+/** Decode base64 string to Uint8Array. */
+function decodeBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) {
+    bytes[i] = bin.charCodeAt(i);
+  }
+  return bytes;
+}
 
 async function handleInit(modelUrl: string): Promise<void> {
   const resp = await fetch(modelUrl);
@@ -19,11 +33,15 @@ async function handleInit(modelUrl: string): Promise<void> {
   }
   const buffer = await resp.arrayBuffer();
   const model = parseHzModel(buffer);
-  weights = parseWeights(model);
+
+  // Decode inlined WASM binary and create engine
+  const wasmBytes = decodeBase64(wasmBase64);
+  engine = await createWasmEngine(wasmBytes, model.header, model.weights);
+  vocab = model.vocab;
 }
 
 function handleRecognize(strokes: number[][][], topK: number): HanScribeResult[] {
-  if (!weights) {
+  if (!engine) {
     throw new Error('Model not loaded');
   }
 
@@ -32,10 +50,10 @@ function handleRecognize(strokes: number[][][], topK: number): HanScribeResult[]
     return [];
   }
 
-  const { indices, scores } = runInference(weights, data, numSegments, topK);
+  const { indices, scores } = engine.runInference(data, numSegments, topK);
 
   return indices.map((idx, i) => ({
-    char: weights!.vocab[idx],
+    char: vocab[idx],
     score: scores[i],
   }));
 }
