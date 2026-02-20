@@ -8,22 +8,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 20px;
       background: #f5f5f5;
       color: #333;
     }
-    h1 { margin-bottom: 4px; }
-    .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
-    .container {
-      display: flex;
+    .page {
+      display: grid;
+      grid-template-columns: auto 1fr;
       gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
+      max-width: 660px;
+      margin: 0 auto;
     }
-    .draw-panel {
+    .panel {
       background: white;
       border-radius: 8px;
       padding: 16px;
@@ -34,7 +30,7 @@
       height: 300px;
       border: 2px solid #ddd;
       border-radius: 4px;
-      background: white;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cline x1='50' y1='0' x2='50' y2='100' stroke='%23e0e0e0' stroke-dasharray='4,4'/%3E%3Cline x1='0' y1='50' x2='100' y2='50' stroke='%23e0e0e0' stroke-dasharray='4,4'/%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23eee' stroke-dasharray='4,4'/%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='%23eee' stroke-dasharray='4,4'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
     }
     .buttons {
       display: flex;
@@ -51,19 +47,23 @@
       color: #333;
     }
     button:hover { background: #d0d0d0; }
-    button.primary { background: #4CAF50; color: white; }
-    button.primary:hover { background: #45a049; }
-    .results-panel {
-      background: white;
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      min-width: 200px;
+    #status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #999;
     }
     .results-panel h2 {
       font-size: 16px;
       margin-bottom: 12px;
       color: #666;
+    }
+    #results {
+      height: 308px;
+      overflow-y: auto;
+    }
+    .placeholder {
+      color: #ccc;
+      font-size: 14px;
     }
     .result-item {
       display: flex;
@@ -97,75 +97,145 @@
       width: 45px;
       text-align: right;
     }
-    #status {
-      margin-top: 12px;
+
+    /* Options panel */
+    .options-panel {
+      grid-column: 1 / -1;
+    }
+    .options-panel h2 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #666;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .option-item label {
+      display: block;
       font-size: 13px;
-      color: #999;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .option-row input[type="range"] { flex: 1; }
+    .option-value {
+      font-size: 13px;
+      color: #333;
+      min-width: 40px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="color"] {
+      width: 40px;
+      height: 28px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    /* Mobile layout */
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .page {
+        grid-template-columns: 1fr;
+        max-width: none;
+      }
+      #draw-area {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+      }
+      #results { height: 160px; }
     }
   </style>
 </head>
 <body>
-  <h1>HanScribe</h1>
-  <p class="subtitle">Draw a Chinese character below</p>
-
-  <div class="container">
-    <div class="draw-panel">
+  <div class="page">
+    <div class="panel draw-panel">
       <div id="draw-area"></div>
       <div class="buttons">
         <button id="clear-btn">Clear</button>
-        <button id="recognize-btn" class="primary">Recognize</button>
       </div>
       <div id="status">Loading model...</div>
     </div>
 
-    <div class="results-panel">
-      <h2>Results</h2>
+    <div class="panel results-panel">
+      <h2 id="results-heading">Results</h2>
       <div id="results">
-        <div style="color: #ccc; font-size: 14px;">Draw a character to see results</div>
+        <div class="placeholder">Draw a character to see results</div>
       </div>
     </div>
-  </div>
+
+    <div class="panel options-panel">
+    <h2>Options</h2>
+    <div class="options-grid">
+      <div class="option-item">
+        <label>Stroke Color</label>
+        <div class="option-row">
+          <input type="color" id="opt-color" value="#000000">
+        </div>
+      </div>
+      <div class="option-item">
+        <label>Stroke Width</label>
+        <div class="option-row">
+          <input type="range" id="opt-width" min="1" max="10" value="3">
+          <span class="option-value" id="opt-width-val">3</span>
+        </div>
+      </div>
+      <div class="option-item">
+        <label>Top K</label>
+        <div class="option-row">
+          <input type="range" id="opt-topk" min="1" max="20" value="8">
+          <span class="option-value" id="opt-topk-val">8</span>
+        </div>
+      </div>
+      <div class="option-item">
+        <label>Debounce</label>
+        <div class="option-row">
+          <input type="range" id="opt-debounce" min="0" max="1000" step="50" value="300">
+          <span class="option-value" id="opt-debounce-val">300ms</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page -->
 
   <script type="module">
-    // Use the built ESM bundle
     import { HanScribe } from './dist/hanscribe.js';
 
     const statusEl = document.getElementById('status');
     const resultsEl = document.getElementById('results');
 
-    try {
-      const pad = await HanScribe.create({
-        element: document.getElementById('draw-area'),
-        modelUrl: 'test/test.hzmodel',
-        topK: 8,
-        onRecognize(results) {
-          renderResults(results);
-        },
-      });
+    const optColor = document.getElementById('opt-color');
+    const optWidth = document.getElementById('opt-width');
+    const optWidthVal = document.getElementById('opt-width-val');
+    const optTopK = document.getElementById('opt-topk');
+    const optTopKVal = document.getElementById('opt-topk-val');
+    const optDebounce = document.getElementById('opt-debounce');
+    const optDebounceVal = document.getElementById('opt-debounce-val');
 
-      statusEl.textContent = 'Ready — draw a character';
+    let pad = null;
 
-      document.getElementById('clear-btn').addEventListener('click', () => {
-        pad.clear();
-        resultsEl.innerHTML = '<div style="color: #ccc; font-size: 14px;">Draw a character to see results</div>';
-      });
+    const resultsHeading = document.getElementById('results-heading');
 
-      document.getElementById('recognize-btn').addEventListener('click', async () => {
-        statusEl.textContent = 'Recognizing...';
-        const results = await pad.recognize();
-        renderResults(results);
-        statusEl.textContent = `Found ${results.length} candidates`;
-      });
-    } catch (err) {
-      statusEl.textContent = `Error: ${err.message}`;
-      console.error(err);
+    function clearResults() {
+      resultsEl.innerHTML = '<div class="placeholder">Draw a character to see results</div>';
+      resultsHeading.textContent = 'Results';
     }
 
     function renderResults(results) {
       if (results.length === 0) {
-        resultsEl.innerHTML = '<div style="color: #ccc; font-size: 14px;">No results</div>';
+        resultsEl.innerHTML = '<div class="placeholder">No results</div>';
+        resultsHeading.textContent = 'Results';
         return;
       }
+      resultsHeading.textContent = `Results (${results.length})`;
       const maxScore = results[0].score;
       resultsEl.innerHTML = results.map(r => `
         <div class="result-item">
@@ -177,6 +247,53 @@
         </div>
       `).join('');
     }
+
+    async function createPad() {
+      if (pad) {
+        pad.destroy();
+        pad = null;
+      }
+      clearResults();
+      statusEl.textContent = 'Loading model...';
+
+      try {
+        pad = await HanScribe.create({
+          element: document.getElementById('draw-area'),
+          modelUrl: 'test/test.hzmodel',
+          strokeColor: optColor.value,
+          strokeWidth: Number(optWidth.value),
+          topK: Number(optTopK.value),
+          debounceMs: Number(optDebounce.value),
+          onRecognize(results) {
+            renderResults(results);
+            statusEl.textContent = 'Ready';
+          },
+        });
+        statusEl.textContent = 'Ready — draw a character';
+      } catch (err) {
+        statusEl.textContent = `Error: ${err.message}`;
+        console.error(err);
+      }
+    }
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (pad) pad.clear();
+      clearResults();
+    });
+
+    // Slider value displays
+    optWidth.addEventListener('input', () => { optWidthVal.textContent = optWidth.value; });
+    optTopK.addEventListener('input', () => { optTopKVal.textContent = optTopK.value; });
+    optDebounce.addEventListener('input', () => { optDebounceVal.textContent = optDebounce.value + 'ms'; });
+
+    // Recreate pad when any option changes
+    optColor.addEventListener('change', createPad);
+    optWidth.addEventListener('change', createPad);
+    optTopK.addEventListener('change', createPad);
+    optDebounce.addEventListener('change', createPad);
+
+    // Initial creation
+    createPad();
   </script>
 </body>
 </html>
