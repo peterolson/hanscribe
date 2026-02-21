@@ -81,4 +81,13 @@ describe('runInference', () => {
     const topChar = weights.vocab[indices[0]];
     expect(topChar).toBe('听');
   }, 30000);
+
+  it('recognizes 听 from sloppy strokes', () => {
+    const { data, numSegments } = preprocessStrokes(refData.ting_sloppy_strokes);
+    const { indices, scores } = runInference(weights, data, numSegments, 10);
+
+    expect(indices.length).toBeGreaterThan(0);
+    const topChar = weights.vocab[indices[0]];
+    expect(topChar).toBe('听');
+  }, 30000);
 });

@@ -202,13 +202,51 @@ function matvecAddQuantized(
   rows: i32,
   cols: i32,
 ): void {
+  const colsSimd: i32 = cols & ~15; // round down to multiple of 16
+
   for (let i: i32 = 0; i < rows; i++) {
-    let sum: f32 = 0;
+    let acc0: v128 = f32x4.splat(0);
+    let acc1: v128 = f32x4.splat(0);
     const rowOff: u32 = wOff + u32(i * cols);
-    for (let j: i32 = 0; j < cols; j++) {
-      const wVal: f32 = f32(i32(load<i8>(rowOff + u32(j))));
-      sum += wVal * load<f32>(xOff + u32(j << 2));
+
+    // SIMD: process 16 int8 weights per iteration
+    for (let j: i32 = 0; j < colsSimd; j += 16) {
+      const wAddr: u32 = rowOff + u32(j);
+      const xAddr: u32 = xOff + u32(j << 2);
+
+      // Load 16 int8 weights, extend to 4 groups of f32x4
+      const w16: v128 = v128.load(wAddr);
+      const wLo: v128 = i16x8.extend_low_i8x16_s(w16);
+      const wHi: v128 = i16x8.extend_high_i8x16_s(w16);
+
+      acc0 = f32x4.add(acc0, f32x4.mul(
+        f32x4.convert_i32x4_s(i32x4.extend_low_i16x8_s(wLo)),
+        v128.load(xAddr),
+      ));
+      acc0 = f32x4.add(acc0, f32x4.mul(
+        f32x4.convert_i32x4_s(i32x4.extend_high_i16x8_s(wLo)),
+        v128.load(xAddr, 16),
+      ));
+      acc1 = f32x4.add(acc1, f32x4.mul(
+        f32x4.convert_i32x4_s(i32x4.extend_low_i16x8_s(wHi)),
+        v128.load(xAddr, 32),
+      ));
+      acc1 = f32x4.add(acc1, f32x4.mul(
+        f32x4.convert_i32x4_s(i32x4.extend_high_i16x8_s(wHi)),
+        v128.load(xAddr, 48),
+      ));
     }
+
+    // Horizontal sum of both accumulators
+    const acc: v128 = f32x4.add(acc0, acc1);
+    let sum: f32 = f32x4.extract_lane(acc, 0) + f32x4.extract_lane(acc, 1)
+                 + f32x4.extract_lane(acc, 2) + f32x4.extract_lane(acc, 3);
+
+    // Scalar remainder for cols not divisible by 16
+    for (let j: i32 = colsSimd; j < cols; j++) {
+      sum += f32(i32(load<i8>(rowOff + u32(j)))) * load<f32>(xOff + u32(j << 2));
+    }
+
     const yAddr: u32 = yOff + u32(i << 2);
     store<f32>(yAddr, load<f32>(yAddr) + scale * sum);
   }
@@ -373,9 +411,17 @@ function runFCAndDecode(inputOff: u32, T: i32, topK: i32): i32 {
     // logits += scale * W * x
     matvecAddQuantized(_logitsOff, fcWeightsOff, fcScale, xOff, numClasses, inputSize);
 
-    // Softmax: find max logit
-    let maxLogit: f32 = f32.MIN_VALUE;
-    for (let i: i32 = 0; i < numClasses; i++) {
+    // Softmax: find max logit (SIMD)
+    let maxVec: v128 = f32x4.splat(f32.MIN_VALUE);
+    const classesSimd: i32 = numClasses & ~3;
+    for (let i: i32 = 0; i < classesSimd; i += 4) {
+      maxVec = f32x4.max(maxVec, v128.load(_logitsOff + u32(i << 2)));
+    }
+    let maxLogit: f32 = Mathf.max(
+      Mathf.max(f32x4.extract_lane(maxVec, 0), f32x4.extract_lane(maxVec, 1)),
+      Mathf.max(f32x4.extract_lane(maxVec, 2), f32x4.extract_lane(maxVec, 3)),
+    );
+    for (let i: i32 = classesSimd; i < numClasses; i++) {
       const v: f32 = load<f32>(_logitsOff + u32(i << 2));
       if (v > maxLogit) maxLogit = v;
     }
@@ -389,9 +435,16 @@ function runFCAndDecode(inputOff: u32, T: i32, topK: i32): i32 {
       sumExp += e;
     }
 
-    // Update maxProb (skip blank at last index)
+    // Update maxProb (skip blank at last index, SIMD)
     const invSum: f32 = 1.0 / sumExp;
-    for (let i: i32 = 0; i < numClasses - 1; i++) {
+    const invSumVec: v128 = f32x4.splat(invSum);
+    const cmSimd: i32 = (numClasses - 1) & ~3;
+    for (let i: i32 = 0; i < cmSimd; i += 4) {
+      const lAddr: u32 = _logitsOff + u32(i << 2);
+      const mAddr: u32 = _maxProbOff + u32(i << 2);
+      v128.store(mAddr, f32x4.max(v128.load(mAddr), f32x4.mul(v128.load(lAddr), invSumVec)));
+    }
+    for (let i: i32 = cmSimd; i < numClasses - 1; i++) {
       const prob: f32 = load<f32>(_logitsOff + u32(i << 2)) * invSum;
       const mpAddr: u32 = _maxProbOff + u32(i << 2);
       if (prob > load<f32>(mpAddr)) {

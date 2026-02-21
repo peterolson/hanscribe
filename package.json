@@ -1,6 +1,6 @@
 {
   "name": "hanscribe",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Chinese handwriting recognition for the web — zero dependencies, WASM-powered",
   "type": "module",
   "main": "dist/hanscribe.umd.js",
@@ -17,7 +17,7 @@
     "dist/"
   ],
   "scripts": {
-    "asbuild": "asc assembly/index.ts --outFile build/inference.wasm --textFile build/inference.wat --optimize --runtime stub --exportRuntime --use abort=",
+    "asbuild": "asc assembly/index.ts --outFile build/inference.wasm --textFile build/inference.wat --optimize --runtime stub --exportRuntime --use abort= --enable simd",
     "build:wasm": "npm run asbuild",
     "build:js": "rollup -c",
     "build": "npm run build:wasm && npm run build:js",

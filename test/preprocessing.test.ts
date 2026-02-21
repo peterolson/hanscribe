@@ -43,12 +43,31 @@ describe('preprocessStrokes', () => {
     }
   });
 
-  it('time features are zero', () => {
+  it('pen-up time features follow chord-length pattern', () => {
     const { data, numSegments } = preprocessStrokes(refData.strokes);
     for (let i = 0; i < numSegments; i++) {
-      expect(data[i * 10 + 7]).toBe(0);
-      expect(data[i * 10 + 8]).toBe(0);
-      expect(data[i * 10 + 9]).toBe(0);
+      if (data[i * 10] > 0.5) continue; // skip pen-down
+      const dx = data[i * 10 + 1];
+      const dy = data[i * 10 + 2];
+      const chordNorm = Math.sqrt(dx * dx + dy * dy);
+      // Pen-up: f[7] = chord, f[8] = chord/3, f[9] = -chord/3
+      expect(data[i * 10 + 7]).toBeCloseTo(chordNorm, 4);
+      expect(data[i * 10 + 8]).toBeCloseTo(chordNorm / 3, 4);
+      expect(data[i * 10 + 9]).toBeCloseTo(-chordNorm / 3, 4);
+    }
+  });
+
+  it('pen-down time features are in reasonable range', () => {
+    const { data, numSegments } = preprocessStrokes(refData.strokes);
+    for (let i = 0; i < numSegments; i++) {
+      if (data[i * 10] < 0.5) continue; // skip pen-up
+      // f[7] = T3-T0 (duration, should be positive and < 5s)
+      expect(data[i * 10 + 7]).toBeGreaterThanOrEqual(0);
+      expect(data[i * 10 + 7]).toBeLessThan(5);
+      // f[8] = T1-T0 (should be reasonable magnitude)
+      expect(Math.abs(data[i * 10 + 8])).toBeLessThan(5);
+      // f[9] = T2-T3 (typically negative)
+      expect(Math.abs(data[i * 10 + 9])).toBeLessThan(5);
     }
   });
 
